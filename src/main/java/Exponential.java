@@ -1,5 +1,7 @@
 package main.java;
 
+import javafx.beans.property.adapter.ReadOnlyJavaBeanBooleanProperty;
+
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -15,6 +17,7 @@ public class Exponential implements Distribution{
     private ArrayList<Job> jobs;
     private int numberJobsProcessed;
     private double timeIdle;
+    private ReentrantLock lock = new ReentrantLock();
 
 
     public Exponential(double nu) {
@@ -32,25 +35,25 @@ public class Exponential implements Distribution{
     }
 
     @Override
-    public synchronized double calculateServiceTime(double probability) throws InterruptedException {
-        this.isLocked = true;
+    public double calculateServiceTime(double probability) throws InterruptedException {
         double serviceTime = (-1 / rate) * Math.log(1 - probability);
-        this.isLocked = false;
         return serviceTime;
     }
 
     @Override
     public boolean isLocked(){
-        this.isLocked = false;
-        if (this.jobs.size()>0){
-            this.isLocked=true;
-        }
-        return this.isLocked;
+        return this.lock.isLocked();
+
     }
 
     @Override
-    public void unlockServer(Job job) {
-        this.jobs.remove(job);
+    public void lockServer(){
+        this.lock.lock();
+    }
+
+    @Override
+    public void unlockServer() {
+        this.lock.unlock();
     }
 
     @Override

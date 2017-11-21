@@ -74,7 +74,7 @@ public class SimulationSystem {
     }
 
     public double calculateExpQueueLengthOnArrival() {
-        return this.queueLength/numberSimulations;
+        return this.queueLengthJobArrives/numberSimulations;
     }
 
     public double calculateMaxWaitTime() {
@@ -95,7 +95,7 @@ public class SimulationSystem {
     }
 
     public double calculatePercentageJobsLeftEarly() {
-        return 0;
+        return this.numberJobsLeftEarly/numberSimulations;
 
     }
 
@@ -109,6 +109,7 @@ public class SimulationSystem {
 
     public void addToWaitingQueue(Job job) throws InterruptedException {
         this.waitingQueue.add(job);
+        this.queueLength++;
     }
 
     public Job dispatchFromQueue() {

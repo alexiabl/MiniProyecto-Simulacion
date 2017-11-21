@@ -44,99 +44,123 @@ public class Simulation {
         int arrivalTime = 0;
         Random random = new Random();
         double elapsedTime = 0;
-        ExecutorService executorService = Executors.newFixedThreadPool(1000);
-        while (elapsedTime < 36){ //36 segundos es el total de tiempo que esta abierto el sistema ya que en 10 horas hay 36,000 segundos
-            long startJob = System.currentTimeMillis();
-            double arrivalProbability = Math.random();
-            double serviceProbability = random.nextDouble();
-            arrivalTime = (int)(arrivalTime - 30*Math.log(arrivalProbability));
-            Job job = new Job(system);
-            job.setServiceProbability(serviceProbability);
-            this.assignServer(job);
-            if (job.getserver() != null) {
-                executorService.execute(job);
+        int numberJobs=0;
+        CustomThreadFactory threadFactory = new CustomThreadFactory("Hilo",1000);
+        while (numberJobs<=threadFactory.getCounter()) { //36 segundos es el total de tiempo que esta abierto el sistema ya que en 10 horas hay 36,000 segundos
+                double arrivalProbability = Math.random();
+                double serviceProbability = random.nextDouble();
+                arrivalTime = (int) (arrivalTime - 30 * Math.log(arrivalProbability));
+                long startJob = System.currentTimeMillis();
+                Job job = new Job(system);
+                job.setServiceProbability(serviceProbability);
+                if (!this.checkServersBusy()){
+                    if (this.system.waitingQueue.size()!=0){
+                        job = this.system.dispatchFromQueue();
+                        this.assignServer(job, startJob);
+                        Thread thread = threadFactory.newThread(job);
+                        thread.start();
+                    }
+                    else {
+                        this.assignServer(job, startJob);
+                        Thread thread = threadFactory.newThread(job);
+                        thread.start();
+                    }
+                }
+                else{
+                    this.system.waitingQueue.add(job);
+                }
+                long end = System.currentTimeMillis();
+                elapsedTime += (end - startJob) / 1000.0;
+                numberJobs++;
             }
-            long end = System.currentTimeMillis();
-            elapsedTime += (end - startJob)/1000.0;
         }
-        executorService.shutdown();
+
+    public void dispatchJob(){
+
     }
 
-    public void assignServer(Job job) throws InterruptedException {
+    public void assignServer(Job job, long startTime) throws InterruptedException {
         double waitingTime = 0;
-        if (!checkServersBusy()){
+        if (!checkServersBusy()) {
             Random random = new Random();
             int chooseServer = random.nextInt(4) + 1;
-            switch (chooseServer){
-                case 1:
-                    if (!gamma1.isLocked()){
-                        job.setserver(gamma1);
-                        waitingTime+=System.currentTimeMillis()/1000.0;
-                        break;
-                    }
-                    else if (gamma1.isLocked() && this.getElapsedTimeInSeconds() < 6){
-                        while (chooseServer == 1) {
-                            chooseServer = random.nextInt(4) + 1;
+            double time = startTime / 1000.0;
+            boolean exit=false;
+            do {
+                switch (chooseServer) {
+                    case 1:
+                        if (!gamma1.isLocked()) {
+                            job.setServer(gamma1);
+                            waitingTime += System.currentTimeMillis() / 1000.0;
+                            exit=true;
+                            break;
+                        } else if (time - System.currentTimeMillis() / 1000.0 > 6) {
+                            system.numberJobsLeftEarly++;
+                            exit=true;
+                            break;
+                            //job.notifyAll();
+                        } else if (gamma1.isLocked() && time - System.currentTimeMillis() / 1000.0 < 6) {
+                            while (chooseServer == 1) {
+                                chooseServer = random.nextInt(4) + 1;
+                            }
                         }
-                    }
-                    else if (this.getElapsedTimeInSeconds() > 6){
-                        system.numberJobsLeftEarly++;
-                        job.notifyAll();
-                    }
-
-                case 2:
-                    if (!gamma2.isLocked()){
-                        job.setserver(gamma2);
-                        waitingTime+=System.currentTimeMillis()/1000.0;
-                        break;
-                    }
-                    else if (gamma2.isLocked() && this.getElapsedTimeInSeconds() < 6){
-                        while (chooseServer == 2) {
-                            chooseServer = random.nextInt(4) + 1;
+                    case 2:
+                        if (!gamma2.isLocked()) {
+                            job.setServer(gamma2);
+                            waitingTime += System.currentTimeMillis() / 1000.0;
+                            exit=true;
+                            break;
+                        } else if (time - System.currentTimeMillis() / 1000.0 > 6) {
+                            system.numberJobsLeftEarly++;
+                            exit=true;
+                            break;
+                            //job.notifyAll();
+                        } else if (gamma2.isLocked() && time - System.currentTimeMillis() / 1000.0 < 6) {
+                            while (chooseServer == 2) {
+                                chooseServer = random.nextInt(4) + 1;
+                            }
                         }
-                    }
-                    else if (this.getElapsedTimeInSeconds() > 6){
-                        system.numberJobsLeftEarly++;
-                        job.notifyAll();
-                    }
-                case 3:
-                    if (!exponential.isLocked()){
-                        job.setserver(exponential);
-                        waitingTime+=System.currentTimeMillis()/1000.0;
-                        break;
-                    }
-                    else if (exponential.isLocked() && this.getElapsedTimeInSeconds()<6){
-                        while (chooseServer == 3) {
-                            chooseServer = random.nextInt(4) + 1;
+                    case 3:
+                        if (!exponential.isLocked()) {
+                            job.setServer(exponential);
+                            waitingTime += System.currentTimeMillis() / 1000.0;
+                            exit=true;
+                            break;
+                        } else if (time - System.currentTimeMillis() / 1000.0 > 6) {
+                            system.numberJobsLeftEarly++;
+                            exit=true;
+                            break;
+                            //job.notifyAll();
+                        } else if (exponential.isLocked() && time - System.currentTimeMillis() / 1000.0 < 6) {
+                            while (chooseServer == 3) {
+                                chooseServer = random.nextInt(4) + 1;
+                            }
                         }
-                    }
-                    else if (this.getElapsedTimeInSeconds() > 6){
-                        system.numberJobsLeftEarly++;
-                        job.notifyAll();
-                    }
-                case 4:
-                    if (!uniform.isLocked()){
-                        job.setserver(uniform);
-                        waitingTime+=System.currentTimeMillis()/1000.0;
-                        break;
-                    }
-                    else if (uniform.isLocked() && this.getElapsedTimeInSeconds() <6){
-                        while (chooseServer ==4){
-                            chooseServer = random.nextInt(4) + 1;
+                    case 4:
+                        if (!uniform.isLocked()) {
+                            job.setServer(uniform);
+                            waitingTime += System.currentTimeMillis() / 1000.0;
+                            exit=true;
+                            break;
+                        } else if (time - System.currentTimeMillis() / 1000.0 > 6) {
+                            system.numberJobsLeftEarly++;
+                            exit=true;
+                            break;
+                            //job.notifyAll();
+                        } else if (uniform.isLocked() && time - System.currentTimeMillis() / 1000.0 < 6) {
+                            while (chooseServer == 4) {
+                                chooseServer = random.nextInt(4) + 1;
+                            }
                         }
-                    }
-                    else if (this.getElapsedTimeInSeconds() > 6){
-                        system.numberJobsLeftEarly++;
-                        job.notifyAll();
-                    }
+                }
             }
+            while (!exit);
         }
         else{
             this.system.queueLengthJobArrives=this.system.waitingQueue.size();
             if (this.system.queueLengthJobArrives > this.system.maxQueueLength){
                 this.system.maxQueueLength = this.system.queueLengthJobArrives;
             }
-            this.system.queueLength +=1;
             this.system.addToWaitingQueue(job);
         }
         this.system.waitingTimeForJob+= waitingTime;
@@ -157,11 +181,11 @@ public class Simulation {
         System.out.println("8- "+this.system.calculatePercentageJobsLeftEarly());
         System.out.println("9- "+this.system.calculateProbOneServerAvailable());
         System.out.println("10- "+this.system.calculateProbTwoServersAvailable());
+        System.out.println("11- "+this.system.calculateExpNumberJobsRemainingAfter());
     }
 
     public void runSimulation() throws InterruptedException {
         this.startSystem();
-        this.calculateSystemStats();
     }
 
     public boolean checkServersBusy(){

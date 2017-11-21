@@ -2,6 +2,7 @@ package main.java;
 
 import java.lang.System;
 import java.lang.*;
+import java.util.Random;
 
 /**
  * Created by alexiaborchgrevink on 11/17/17.
@@ -18,12 +19,17 @@ public class Job implements Runnable {
         this.simulationSystem = simulationSystem;
     }
 
-    public Distribution getserver() {
+    public Distribution getServer() {
         return server;
     }
 
-    public void setserver(Distribution server) {
+    public void setServer(Distribution server) {
         this.server = server;
+        this.server.lockServer();
+    }
+
+    public void releaseServer(){
+        this.server.unlockServer();
     }
 
     public double getServiceProbability() {
@@ -52,9 +58,15 @@ public class Job implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        try {
+            Thread.currentThread().sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         System.out.println("The service time for " + Thread.currentThread().getName() + " with server " + this.server.getClass().getSimpleName() + " is " + this.serviceTime);
-        this.getserver().unlockServer(this);
         this.timer = System.currentTimeMillis()-start/1000.0;
+        this.releaseServer();
+        System.out.println("Server is unlocked "+this.server.isLocked());
     }
 
     public double getTimer(){

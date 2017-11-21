@@ -19,6 +19,8 @@ public class Gamma implements Distribution {
     private ArrayList<Job> jobs;
     private int numberJobsProcessed;
     private double timeIdle;
+    private ReentrantLock lock = new ReentrantLock();
+
 
 
     public Gamma(int alpha, int nu) {
@@ -55,7 +57,7 @@ public class Gamma implements Distribution {
 
 
     @Override
-    public synchronized double calculateServiceTime(double probability) throws InterruptedException {
+    public double calculateServiceTime(double probability) throws InterruptedException {
         double temp = this.timeIdle;
         this.timeIdle = System.currentTimeMillis()-temp/1000.0;
         this.nJobs++;
@@ -68,16 +70,17 @@ public class Gamma implements Distribution {
 
     @Override
     public boolean isLocked(){
-        this.isLocked=false;
-        if (this.jobs.size()>0){
-            this.isLocked=true;
-        }
-        return this.isLocked;
+        return this.lock.isLocked();
     }
 
     @Override
-    public void unlockServer(Job job) {
-        this.jobs.remove(job);
+    public void unlockServer() {
+        this.lock.unlock();
+    }
+
+    @Override
+    public void lockServer(){
+        this.lock.lock();
     }
 
     @Override

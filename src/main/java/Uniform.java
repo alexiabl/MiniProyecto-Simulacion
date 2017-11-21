@@ -16,6 +16,8 @@ public class Uniform implements Distribution {
     private ArrayList<Job> jobs;
     private int numberJobsProcessed;
     private double timeIdle;
+    private ReentrantLock lock = new ReentrantLock();
+
 
 
     public Uniform(int a, int b) {
@@ -43,25 +45,19 @@ public class Uniform implements Distribution {
     }
 
     @Override
-    public synchronized double calculateServiceTime(double probability) throws InterruptedException {
-        this.isLocked = true;
+    public double calculateServiceTime(double probability) throws InterruptedException {
         double serviceTime = a + (b - a) * probability;
-        this.isLocked = false;
         return serviceTime;
     }
 
     @Override
     public boolean isLocked(){
-        this.isLocked = false;
-        if (this.jobs.size()>0){
-            this.isLocked=true;
-        }
-        return this.isLocked;
+        return this.lock.isLocked();
     }
 
     @Override
-    public void unlockServer(Job job) {
-        this.jobs.remove(job);
+    public void unlockServer() {
+        this.lock.unlock();
     }
 
     @Override
@@ -77,6 +73,11 @@ public class Uniform implements Distribution {
     @Override
     public double getIdle() {
         return this.timeIdle;
+    }
+
+    @Override
+    public void lockServer(){
+        this.lock.lock();
     }
 
 }
