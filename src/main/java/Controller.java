@@ -9,8 +9,7 @@ import java.util.concurrent.ExecutionException;
 public class Controller {
 
     public static void main (String args[]) throws InterruptedException, ExecutionException {
-        Simulation simulation = new Simulation();
-        double arrivalRate = simulation.getExponentialArrivalRate();
-        simulation.runSimulation(1000, arrivalRate);
+        Simulation simulation = new Simulation(1000);
+        simulation.runSimulation();
     }
 }

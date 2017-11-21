@@ -9,4 +9,12 @@ public interface Distribution {
 
     public boolean isLocked();
 
+    public void unlockServer(Job job);
+
+    public void addToProcessedJobs();
+
+    public int getNumberProcessedJobs();
+
+    public double getIdle();
+
 }

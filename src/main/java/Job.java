@@ -11,10 +11,11 @@ public class Job implements Runnable {
     private Distribution server;
     private double serviceProbability;
     private double serviceTime;
-    private main.java.System system;
+    private SimulationSystem simulationSystem;
+    private double timer;
 
-    public Job(main.java.System system) {
-        this.system = system;
+    public Job(SimulationSystem simulationSystem) {
+        this.simulationSystem = simulationSystem;
     }
 
     public Distribution getserver() {
@@ -44,12 +45,20 @@ public class Job implements Runnable {
 
     @Override
     public void run() {
+        double start=System.currentTimeMillis();
         try {
             this.serviceTime = server.calculateServiceTime(this.serviceProbability);
+            this.server.addToProcessedJobs();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         System.out.println("The service time for " + Thread.currentThread().getName() + " with server " + this.server.getClass().getSimpleName() + " is " + this.serviceTime);
+        this.getserver().unlockServer(this);
+        this.timer = System.currentTimeMillis()-start/1000.0;
+    }
+
+    public double getTimer(){
+        return this.timer;
     }
 
 }

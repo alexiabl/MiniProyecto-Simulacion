@@ -1,5 +1,6 @@
 package main.java;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -12,14 +13,16 @@ public class Uniform implements Distribution {
     private boolean isLocked;
     private int a;
     private int b;
+    private ArrayList<Job> jobs;
+    private int numberJobsProcessed;
+    private double timeIdle;
 
-    public Uniform() {
-
-    }
 
     public Uniform(int a, int b) {
         this.a = a;
         this.b = b;
+        this.jobs = new ArrayList<>(1);
+        this.numberJobsProcessed=0;
     }
 
 
@@ -49,6 +52,31 @@ public class Uniform implements Distribution {
 
     @Override
     public boolean isLocked(){
+        this.isLocked = false;
+        if (this.jobs.size()>0){
+            this.isLocked=true;
+        }
         return this.isLocked;
     }
+
+    @Override
+    public void unlockServer(Job job) {
+        this.jobs.remove(job);
+    }
+
+    @Override
+    public void addToProcessedJobs() {
+        this.numberJobsProcessed++;
+    }
+
+    @Override
+    public int getNumberProcessedJobs() {
+        return this.numberJobsProcessed;
+    }
+
+    @Override
+    public double getIdle() {
+        return this.timeIdle;
+    }
+
 }

@@ -1,5 +1,8 @@
 package main.java;
 
+import java.lang.*;
+import java.lang.System;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -13,14 +16,17 @@ public class Gamma implements Distribution {
     private int nu;
     private boolean isLocked;
     public int nJobs;
+    private ArrayList<Job> jobs;
+    private int numberJobsProcessed;
+    private double timeIdle;
 
-    public Gamma() {
-
-    }
 
     public Gamma(int alpha, int nu) {
         this.alpha = alpha;
         this.nu = nu;
+        this.jobs = new ArrayList<>(1);
+        this.numberJobsProcessed=0;
+        this.timeIdle = java.lang.System.currentTimeMillis();
     }
 
     public int getalpha() {
@@ -43,20 +49,49 @@ public class Gamma implements Distribution {
         return this.nJobs;
     }
 
+    public ArrayList getJobs(){
+        return this.jobs;
+    }
+
+
     @Override
     public synchronized double calculateServiceTime(double probability) throws InterruptedException {
-        this.isLocked = true;
+        double temp = this.timeIdle;
+        this.timeIdle = System.currentTimeMillis()-temp/1000.0;
         this.nJobs++;
         double serviceTime = 0.0;
             for (int i = 0; i <= alpha; i++) {
                 serviceTime += (-1 / nu) * Math.log(1 - probability);
             }
-        this.isLocked = false;
         return serviceTime;
     }
 
     @Override
     public boolean isLocked(){
+        this.isLocked=false;
+        if (this.jobs.size()>0){
+            this.isLocked=true;
+        }
         return this.isLocked;
+    }
+
+    @Override
+    public void unlockServer(Job job) {
+        this.jobs.remove(job);
+    }
+
+    @Override
+    public void addToProcessedJobs() {
+        this.numberJobsProcessed++;
+    }
+
+    @Override
+    public int getNumberProcessedJobs() {
+        return this.numberJobsProcessed;
+    }
+
+    @Override
+    public double getIdle() {
+        return this.timeIdle;
     }
 }
