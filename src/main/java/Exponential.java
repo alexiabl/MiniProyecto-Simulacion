@@ -17,26 +17,30 @@ public class Exponential implements Distribution{
     private ArrayList<Job> jobs;
     private int numberJobsProcessed;
     private double timeIdle;
-    private ReentrantLock lock = new ReentrantLock();
+    public ReentrantLock lock;
 
 
     public Exponential(double nu) {
         this.rate = nu;
         this.jobs = new ArrayList<>(1);
         this.numberJobsProcessed =0;
+        lock = new ReentrantLock();
     }
 
-    public synchronized double getNu() {
+    public  double getNu() {
         return rate;
     }
 
-    public synchronized void setNu(double nu) {
+    public  void setNu(double nu) {
         this.rate = nu;
     }
 
     @Override
     public double calculateServiceTime(double probability) throws InterruptedException {
-        double serviceTime = (-1 / rate) * Math.log(1 - probability);
+        double serviceTime =0.0;
+        double temp = this.timeIdle;
+        this.timeIdle += System.currentTimeMillis() - temp / 1000.0;
+        serviceTime = (-1 / rate) * Math.log(1 - probability);
         return serviceTime;
     }
 
@@ -53,7 +57,9 @@ public class Exponential implements Distribution{
 
     @Override
     public void unlockServer() {
-        this.lock.unlock();
+        if (this.lock.isHeldByCurrentThread()) {
+            this.lock.unlock();
+        }
     }
 
     @Override

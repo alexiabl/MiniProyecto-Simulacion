@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 public class Controller {
 
     public static void main (String args[]) throws InterruptedException, ExecutionException {
-        Simulation simulation = new Simulation(1000);
+        Simulation simulation = new Simulation(500);
         simulation.runSimulation();
         simulation.calculateSystemStats();
     }

@@ -16,7 +16,7 @@ public class Uniform implements Distribution {
     private ArrayList<Job> jobs;
     private int numberJobsProcessed;
     private double timeIdle;
-    private ReentrantLock lock = new ReentrantLock();
+    public ReentrantLock lock;
 
 
 
@@ -25,6 +25,7 @@ public class Uniform implements Distribution {
         this.b = b;
         this.jobs = new ArrayList<>(1);
         this.numberJobsProcessed=0;
+        lock = new ReentrantLock();
     }
 
 
@@ -46,7 +47,10 @@ public class Uniform implements Distribution {
 
     @Override
     public double calculateServiceTime(double probability) throws InterruptedException {
-        double serviceTime = a + (b - a) * probability;
+        double serviceTime=0.0;
+        double temp = this.timeIdle;
+        this.timeIdle += System.currentTimeMillis() - temp / 1000.0;
+        serviceTime = a + (b - a) * probability;
         return serviceTime;
     }
 
@@ -57,7 +61,9 @@ public class Uniform implements Distribution {
 
     @Override
     public void unlockServer() {
-        this.lock.unlock();
+        if (this.lock.isHeldByCurrentThread()) {
+            this.lock.unlock();
+        }
     }
 
     @Override

@@ -28,7 +28,7 @@ public class SimulationSystem {
     private Uniform uniform;
 
     public SimulationSystem(int numberSimulations) {
-        waitingQueue = new ArrayBlockingQueue<Job>(1000);
+        waitingQueue = new ArrayBlockingQueue<Job>(numberSimulations+1);
         this.numberSimulations = numberSimulations;
     }
 
@@ -91,11 +91,11 @@ public class SimulationSystem {
     }
 
     public double calculateExpNumberJobsRemainingAfter() {
-        return 0;
+        return this.numberJobsRemainingAfter;
     }
 
     public double calculatePercentageJobsLeftEarly() {
-        return this.numberJobsLeftEarly/numberSimulations;
+        return (this.numberJobsLeftEarly/100)*10;
 
     }
 
@@ -107,9 +107,33 @@ public class SimulationSystem {
         return 0;
     }
 
+    public double calculateGamma1TimeIdle(){
+        double gammaIdle = this.gamma1.getIdle();
+        return gammaIdle/numberSimulations;
+    }
+
+    public double calculateGamma2TimeIdle(){
+        double gammaIdle = this.gamma2.getIdle();
+        return gammaIdle/numberSimulations;
+    }
+    public double calculateExponentialTimeIdle(){
+        double expoIdle = this.exponential.getIdle();
+        return expoIdle/numberSimulations;
+    }
+
+    public double calculateUniformTimeIdle(){
+        double uniformIdle = this.uniform.getIdle();
+        return uniformIdle/numberSimulations;
+    }
+
+
     public void addToWaitingQueue(Job job) throws InterruptedException {
+        //this.checkQueue();
+        if (this.maxQueueLength < this.waitingQueue.size()){
+            this.maxQueueLength = this.waitingQueue.size();
+        }
+        this.queueLengthJobArrives += this.waitingQueue.size();
         this.waitingQueue.add(job);
-        this.queueLength++;
     }
 
     public Job dispatchFromQueue() {
@@ -119,5 +143,15 @@ public class SimulationSystem {
 
     public Queue<Job> getWaitingQueue(){
         return this.waitingQueue;
+    }
+
+    public void checkQueue(){
+        for (Job job: waitingQueue) {
+            if (System.currentTimeMillis()/1000.0 / job.getTimer() > 6){
+                System.out.println("Job leaving early...");
+                this.waitingQueue.remove(job);
+                this.numberJobsLeftEarly++;
+            }
+        }
     }
 }

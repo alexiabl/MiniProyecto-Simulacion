@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadFactory;
 /**
  * Created by alexiaborchgrevink on 11/17/17.
  */
-public class CustomThreadFactory implements ThreadFactory {
+public class CustomThreadFactory {
 
     private String name;
     private int counter;
@@ -19,11 +19,11 @@ public class CustomThreadFactory implements ThreadFactory {
         this.maxThreads=maxThreads;
     }
 
-    @Override
-    public Thread newThread(Runnable r) {
+    public Thread newThread(Job r) {
         this.counter++;
         return new Thread(r, name+"-"+counter);
     }
+
 
     public int getCounter(){
         return this.counter;

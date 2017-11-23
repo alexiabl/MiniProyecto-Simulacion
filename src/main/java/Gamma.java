@@ -19,7 +19,7 @@ public class Gamma implements Distribution {
     private ArrayList<Job> jobs;
     private int numberJobsProcessed;
     private double timeIdle;
-    private ReentrantLock lock = new ReentrantLock();
+    public ReentrantLock lock;
 
 
 
@@ -29,6 +29,7 @@ public class Gamma implements Distribution {
         this.jobs = new ArrayList<>(1);
         this.numberJobsProcessed=0;
         this.timeIdle = java.lang.System.currentTimeMillis();
+        lock = new ReentrantLock();
     }
 
     public int getalpha() {
@@ -58,10 +59,10 @@ public class Gamma implements Distribution {
 
     @Override
     public double calculateServiceTime(double probability) throws InterruptedException {
-        double temp = this.timeIdle;
-        this.timeIdle = System.currentTimeMillis()-temp/1000.0;
-        this.nJobs++;
-        double serviceTime = 0.0;
+            double temp = this.timeIdle;
+            this.timeIdle += System.currentTimeMillis() - temp / 1000.0;
+            this.nJobs++;
+            double serviceTime=0.0;
             for (int i = 0; i <= alpha; i++) {
                 serviceTime += (-1 / nu) * Math.log(1 - probability);
             }
@@ -75,7 +76,9 @@ public class Gamma implements Distribution {
 
     @Override
     public void unlockServer() {
-        this.lock.unlock();
+        if (this.lock.isHeldByCurrentThread()) {
+            this.lock.unlock();
+        }
     }
 
     @Override
