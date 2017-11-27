@@ -12,15 +12,16 @@ public class Job implements Runnable {
     private double serviceProbability;
     private double serviceTime;
     private SimulationSystem simulationSystem;
-    private double timer;
+    private long timer;
     private ServerController serverController;
-    private double waitJobTime;
+    private long waitJobTime;
+    private int id;
 
     public Job(SimulationSystem simulationSystem, double serviceProbability, ServerController serverController){
         this.simulationSystem = simulationSystem;
         this.serviceProbability = serviceProbability;
         this.serverController = serverController;
-        this.waitJobTime=0.0;
+        this.waitJobTime=0;
     }
 
     public double getServiceProbability() {
@@ -46,36 +47,34 @@ public class Job implements Runnable {
 
     @Override
     public void run() {
-        double start=System.currentTimeMillis();
+        long start=System.currentTimeMillis();
         Distribution server = null;
         try {
             server= this.serverController.assignServer();
-            this.waitJobTime = System.currentTimeMillis()-start/1000.0;
+            this.waitJobTime = System.currentTimeMillis()-start;
             server.lockServer();
             this.serviceTime = server.calculateServiceTime(this.serviceProbability);
-            server.addToProcessedJobs();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        try {
+/*        try {
             Thread.currentThread().sleep(1);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
         System.out.println("The service time for Job" +" with server " + server.getClass().getSimpleName() + " is " + this.serviceTime);
-        this.timer = System.currentTimeMillis()-start/1000.0;
+        this.timer = System.currentTimeMillis()-start;
         if (server!=null) {
             server.unlockServer();
         }
     }
 
 
-    public double getTimer(){
+    public long getTimer(){
         return this.timer;
     }
 
-    public double getWaitJobTime(){
+    public long getWaitJobTime(){
         return this.waitJobTime;
     }
 

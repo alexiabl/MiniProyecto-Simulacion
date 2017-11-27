@@ -1,6 +1,10 @@
 package main.java;
 
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -14,8 +18,8 @@ public class ServerController {
     public Uniform uniform;
     private SimulationSystem system;
     private ArrayList<Distribution> servers;
-    private double waitJobTime;
-    private double maxWaitTime;
+    private long waitJobTime;
+    private long maxWaitTime;
 
     public ServerController(Gamma gamma1, Gamma gamma2, Exponential exponential, Uniform uniform, SimulationSystem system){
         this.system=system;
@@ -28,24 +32,12 @@ public class ServerController {
         this.servers.add(gamma2);
         this.servers.add(exponential);
         this.servers.add(uniform);
-        this.waitJobTime = 0.0;
-        this.maxWaitTime = 0.0;
-    }
-
-    public boolean checkServersBusy() {
-        boolean allBusy = false;
-        if (gamma1.isLocked() && gamma2.isLocked() && uniform.isLocked() && exponential.isLocked()) {
-            allBusy = true;
-        }
-        return allBusy;
     }
 
     public Distribution assignServer() throws InterruptedException {
-        double start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         Distribution server = null;
-        //if (!checkServersBusy()) {
             Random random = new Random();
-            boolean exit = false;
             int chooseServer = random.nextInt(4);
             if (servers.get(chooseServer).isLocked()) {
                 do {
@@ -59,26 +51,31 @@ public class ServerController {
             else{
                 server = servers.get(chooseServer);
             }
-        //} else {
-         /*   this.system.queueLengthJobArrives = this.system.waitingQueue.size();
-            if (this.system.queueLengthJobArrives > this.system.maxQueueLength) {
-                this.system.maxQueueLength = this.system.queueLengthJobArrives;
-            }
-        }*/
-        double done = System.currentTimeMillis();
-        if (this.maxWaitTime < this.waitJobTime){
-            this.maxWaitTime = this.waitJobTime;
+        long end = System.currentTimeMillis();
+        long timer = end-start;
+        this.waitJobTime += timer;
+        if (this.maxWaitTime < timer){
+            this.maxWaitTime = timer;
         }
-        this.waitJobTime += done-start/1000;
         return server;
     }
 
-    public double getWaitJobTime(){
+    public long getWaitJobTime(){
         return this.waitJobTime;
     }
 
-    public double getMaxWaitTime(){
+    public long getMaxWaitTime(){
         return this.maxWaitTime;
     }
+
+    public double calculateProbOneServerAvailable() {
+        return 0;
+    }
+
+    public double calculateProbTwoServersAvailable() {
+
+        return 0;
+    }
+
 }
 

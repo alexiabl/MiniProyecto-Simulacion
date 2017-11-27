@@ -1,10 +1,7 @@
 package main.java;
 
-import javafx.beans.property.adapter.ReadOnlyJavaBeanBooleanProperty;
-
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -12,19 +9,18 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Exponential implements Distribution{
 
-    private boolean isLocked;
     private double rate;
-    private ArrayList<Job> jobs;
     private int numberJobsProcessed;
-    private double timeIdle;
+    private long timeIdle;
     public ReentrantLock lock;
+    private long timer;
 
 
     public Exponential(double nu) {
         this.rate = nu;
-        this.jobs = new ArrayList<>(1);
         this.numberJobsProcessed =0;
         lock = new ReentrantLock();
+        this.timer=0;
     }
 
     public  double getNu() {
@@ -37,10 +33,11 @@ public class Exponential implements Distribution{
 
     @Override
     public double calculateServiceTime(double probability) throws InterruptedException {
-        double serviceTime =0.0;
-        double temp = this.timeIdle;
-        this.timeIdle += System.currentTimeMillis() - temp / 1000.0;
-        serviceTime = (-1 / rate) * Math.log(1 - probability);
+        long temp = this.timer;
+        this.timer+=System.currentTimeMillis();
+        this.timeIdle += timer-temp;
+        double serviceTime = (-1 / rate) * Math.log(1 - probability);
+        this.addToProcessedJobs();
         return serviceTime;
     }
 
@@ -73,7 +70,7 @@ public class Exponential implements Distribution{
     }
 
     @Override
-    public double getIdle() {
+    public long getIdle() {
         return this.timeIdle;
     }
 

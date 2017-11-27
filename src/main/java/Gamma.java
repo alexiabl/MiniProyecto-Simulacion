@@ -2,6 +2,8 @@ package main.java;
 
 import java.lang.*;
 import java.lang.System;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -13,23 +15,20 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Gamma implements Distribution {
 
     private int alpha;
-    private int nu;
-    private boolean isLocked;
-    public int nJobs;
-    private ArrayList<Job> jobs;
+    private double nu;
     private int numberJobsProcessed;
-    private double timeIdle;
+    private long timeIdle;
     public ReentrantLock lock;
+    private long timer;
 
 
 
-    public Gamma(int alpha, int nu) {
+    public Gamma(int alpha, double nu) {
         this.alpha = alpha;
         this.nu = nu;
-        this.jobs = new ArrayList<>(1);
         this.numberJobsProcessed=0;
-        this.timeIdle = java.lang.System.currentTimeMillis();
         lock = new ReentrantLock();
+        this.timer=0;
     }
 
     public int getalpha() {
@@ -40,7 +39,7 @@ public class Gamma implements Distribution {
         this.alpha = alpha;
     }
 
-    public int getNu() {
+    public double getNu() {
         return nu;
     }
 
@@ -48,24 +47,17 @@ public class Gamma implements Distribution {
         this.nu = nu;
     }
 
-    public int getnJobs(){
-        return this.nJobs;
-    }
-
-    public ArrayList getJobs(){
-        return this.jobs;
-    }
-
 
     @Override
     public double calculateServiceTime(double probability) throws InterruptedException {
-            double temp = this.timeIdle;
-            this.timeIdle += System.currentTimeMillis() - temp / 1000.0;
-            this.nJobs++;
+        long temp = this.timer;
+        this.timer+=System.currentTimeMillis();
+        this.timeIdle += timer-temp;
             double serviceTime=0.0;
             for (int i = 0; i <= alpha; i++) {
                 serviceTime += (-1 / nu) * Math.log(1 - probability);
             }
+            this.addToProcessedJobs();
         return serviceTime;
     }
 
@@ -97,7 +89,7 @@ public class Gamma implements Distribution {
     }
 
     @Override
-    public double getIdle() {
+    public long getIdle() {
         return this.timeIdle;
     }
 }

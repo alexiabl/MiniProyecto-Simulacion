@@ -1,5 +1,7 @@
 package main.java;
 
+import java.time.Duration;
+
 /**
  * Created by alexiaborchgrevink on 11/17/17.
  */
@@ -15,7 +17,7 @@ public interface Distribution {
 
     public int getNumberProcessedJobs();
 
-    public double getIdle();
+    public long getIdle();
 
     public void lockServer();
 

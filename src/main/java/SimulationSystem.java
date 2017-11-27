@@ -1,25 +1,27 @@
 package main.java;
 
+import java.sql.Time;
+import java.time.Duration;
+import java.util.AbstractQueue;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by alexiaborchgrevink on 11/17/17.
  */
 public class SimulationSystem {
-    public double waitingTimeForJob;
-    public double responseTime;
+    public long waitingTimeForJob;
+    public long responseTime;
     public double queueLengthJobArrives;
-    public double waitTime;
+    public long maxWaitTime;
     public double queueLength;
     public double probOneServerAvailable;
     public double probTwoServersAvailable;
-    public double timeServerIdle;
     public double numberJobsRemainingAfter;
     public double numberJobsLeftEarly;
-    public double numberJobsByServer;
-    public ArrayBlockingQueue<Job> waitingQueue;
+    public Queue<Job> waitingQueue;
     public int numberSimulations;
     public double maxQueueLength;
     private Gamma gamma1;
@@ -65,20 +67,23 @@ public class SimulationSystem {
     }
 
 
-    public double calculateExpWaitingTimeJob() {
-        return this.waitingTimeForJob/numberSimulations;
+    public long calculateExpWaitingTimeJob() {
+        long expected = ((this.waitingTimeForJob/1000));
+        return expected;
     }
 
-    public double calculateExpResponseTime() {
-        return this.responseTime/numberSimulations;
+    public long calculateExpResponseTime() {
+        long expected = ((this.responseTime/1000));
+        return expected;
+
     }
 
     public double calculateExpQueueLengthOnArrival() {
         return this.queueLengthJobArrives/numberSimulations;
     }
 
-    public double calculateMaxWaitTime() {
-        return this.waitTime/numberSimulations;
+    public long calculateMaxWaitTime() {
+        return this.maxWaitTime;
     }
 
     public double calculateMaxQueueLength() {
@@ -91,7 +96,7 @@ public class SimulationSystem {
     }
 
     public double calculateExpNumberJobsRemainingAfter() {
-        return this.numberJobsRemainingAfter;
+        return this.numberJobsRemainingAfter/numberSimulations;
     }
 
     public double calculatePercentageJobsLeftEarly() {
@@ -107,25 +112,32 @@ public class SimulationSystem {
         return 0;
     }
 
-    public double calculateGamma1TimeIdle(){
-        double gammaIdle = this.gamma1.getIdle();
-        return gammaIdle/numberSimulations;
+    public long calculateGamma1TimeIdle(){
+        long gammaidle = this.gamma1.getIdle();
+        long result = (gammaidle/numberSimulations);
+        result %= (1000*60);
+        return result;
     }
 
-    public double calculateGamma2TimeIdle(){
-        double gammaIdle = this.gamma2.getIdle();
-        return gammaIdle/numberSimulations;
-    }
-    public double calculateExponentialTimeIdle(){
-        double expoIdle = this.exponential.getIdle();
-        return expoIdle/numberSimulations;
+    public long calculateGamma2TimeIdle(){
+        long gammaidle = this.gamma2.getIdle();
+        long result = (gammaidle/numberSimulations);
+        result %= (1000*60);
+        return result;
     }
 
-    public double calculateUniformTimeIdle(){
-        double uniformIdle = this.uniform.getIdle();
-        return uniformIdle/numberSimulations;
-    }
+    public long calculateExponentialTimeIdle(){
+        long exponentialIdle = this.exponential.getIdle();
+        long result = (exponentialIdle/numberSimulations);
+        result %= (1000*60);
+        return result;    }
 
+    public long calculateUniformTimeIdle(){
+        long uniformIdle = this.uniform.getIdle();
+        long result = (uniformIdle/numberSimulations);
+        result %= (1000*60);
+        return result;
+    }
 
     public void addToWaitingQueue(Job job) throws InterruptedException {
         //this.checkQueue();
@@ -133,7 +145,13 @@ public class SimulationSystem {
             this.maxQueueLength = this.waitingQueue.size();
         }
         this.queueLengthJobArrives += this.waitingQueue.size();
-        this.waitingQueue.add(job);
+        try {
+            this.waitingQueue.add(job);
+        }
+        catch (IllegalStateException e){
+            System.out.println("Queue full");
+            this.numberJobsLeftEarly++;
+        }
     }
 
     public Job dispatchFromQueue() {

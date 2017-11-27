@@ -1,5 +1,7 @@
 package main.java;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -10,22 +12,21 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Uniform implements Distribution {
 
-    private boolean isLocked;
     private int a;
     private int b;
-    private ArrayList<Job> jobs;
     private int numberJobsProcessed;
-    private double timeIdle;
+    private long timeIdle;
     public ReentrantLock lock;
+    private long timer;
 
 
 
     public Uniform(int a, int b) {
         this.a = a;
         this.b = b;
-        this.jobs = new ArrayList<>(1);
         this.numberJobsProcessed=0;
         lock = new ReentrantLock();
+        this.timer=0;
     }
 
 
@@ -47,10 +48,11 @@ public class Uniform implements Distribution {
 
     @Override
     public double calculateServiceTime(double probability) throws InterruptedException {
-        double serviceTime=0.0;
-        double temp = this.timeIdle;
-        this.timeIdle += System.currentTimeMillis() - temp / 1000.0;
-        serviceTime = a + (b - a) * probability;
+        long temp = this.timer;
+        this.timer+=System.currentTimeMillis();
+        this.timeIdle += timer-temp;
+        double serviceTime = a + (b - a) * probability;
+        this.addToProcessedJobs();
         return serviceTime;
     }
 
@@ -77,7 +79,7 @@ public class Uniform implements Distribution {
     }
 
     @Override
-    public double getIdle() {
+    public long getIdle() {
         return this.timeIdle;
     }
 
